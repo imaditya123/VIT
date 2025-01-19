@@ -1,7 +1,8 @@
 import argparse
 import os
 from vit import VitV1
-
+import urllib.request
+from zipfile import ZipFile 
 
 def init_repo(args):
     vit = VitV1(repo_path=os.getcwd())
@@ -35,6 +36,20 @@ def diff_changes(args):
     vit = VitV1(repo_path=os.getcwd())
     for file in args.files:
         vit.diff(file)
+
+def clone_repo(args):
+    repo_name=args.url.split("/")[-1].replace(".git",'')
+    url=args.url.replace(".git","/archive/master.zip")
+    # Repo Download
+    print(repo_name)
+    save_path=os.path.join(os.getcwd(),f"{repo_name}.zip")
+    print(save_path)
+    with urllib.request.urlopen(url) as dl_file:
+        with open(save_path, 'wb') as out_file:
+            out_file.write(dl_file.read())
+    # unziping
+    with ZipFile(save_path) as zObject: 
+        zObject.extractall() 
 
 
 def main():
@@ -74,6 +89,11 @@ def main():
     parser_diff = subparsers.add_parser("diff", help="Show the diff in the file")
     parser_diff.add_argument("files", nargs="+", help="Files to show the diff")
     parser_diff.set_defaults(func=diff_changes)
+
+    # Subparser for Clone
+    parser_repo = subparsers.add_parser("clone", help="clones the repo")
+    parser_repo.add_argument("url", help="url of the github repository")
+    parser_repo.set_defaults(func=clone_repo)
 
     args = parser.parse_args()
 

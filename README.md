@@ -7,6 +7,7 @@ VIT (Version Information Tracker) is a simple command-line version control syste
 
 ## Features
 
+- **Clone a repository** (`vit clone`)
 - **Initialize a new repository** (`vit init`)
 - **Add files to the staging area** (`vit add`)
 - **Commit changes** with a message (`vit commit`)
