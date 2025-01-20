@@ -56,7 +56,10 @@ def merge_branches(args):
     vit = VitV1(repo_path=os.getcwd())
     vit.merge(args.branch)
     
-
+def stash_commit(args):
+    vit = VitV1(repo_path=os.getcwd())
+    vit.stash()
+    
 def main():
 
     parser = argparse.ArgumentParser(description="VIT: Version Information Tracker is a version control tool.")
@@ -100,10 +103,15 @@ def main():
     parser_repo.add_argument("url", help="url of the github repository")
     parser_repo.set_defaults(func=clone_repo)
 
-    # Subparser for Diif
+    # Subparser for Merge
     parser_merge = subparsers.add_parser("merge", help="Merge the branches")
     parser_merge.add_argument("branch",  help="Branch that needs to merge")
     parser_merge.set_defaults(func=merge_branches)
+
+    # Subparser for stash
+    parser_stash = subparsers.add_parser("stash", help="Update the local changes to the last commit")
+    parser_stash.set_defaults(func=stash_commit)
+
 
     args = parser.parse_args()
 

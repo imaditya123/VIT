@@ -104,6 +104,51 @@ class VitV1:
         except Exception as e:
             raise RuntimeError(f"Failed to retrieve the current commit: {e}")
 
+    def _get_diverge_commit(self, branch1, branch2):
+        def prev(node1):
+            with open(os.path.join(self.object_dir, node1), "r") as commit_content:
+                content = json.load(commit_content)
+            return content["parent"]
+
+        first1 = self.get_branch_last_commit(branch1)
+        first2 = self.get_branch_last_commit(branch2)
+
+        node1 = first1
+        node2 = first2
+
+        while True:
+            if node1 == node2 and node1 != "":
+                return node1
+            node1 = prev(node1) if node1 != "" else first1
+            node2 = prev(node2) if node2 != "" else first2
+            node2 = prev(node2) if node2 != "" else first2
+
+    def _get_list_commits(self, branch, commit):
+        def prev(node1):
+            with open(os.path.join(self.object_dir, node1), "r") as commit_content:
+                content = json.load(commit_content)
+            return content["parent"]
+
+        node = self.get_branch_last_commit(branch)
+        list_node = []
+        while node != commit:
+            list_node.append(node)
+            node = prev(node)
+
+        list_node.append(commit)
+        return list_node
+
+    def _get_comment_character(self, file_path: str, content) -> str:
+        extention = file_path.split(".")[-1]
+        if extenstion in (".c", ".cpp", ".java", ".js", ".cs", ".swift", ".go"):
+            return f"/* f{content} */"
+        elif extenstion in (".py", ".rb", ".pl", ".sh", ".r"):
+            return "\n".join(["# f{cont}" for cont in content.splitlines()])
+        elif extenstion in (".html", ".md", ".xml"):
+            return f"<!-- {content} -->"
+        else:
+            return content
+
     def init(self) -> None:
         """
         Initializes and creates the required directories and files for the repository.
@@ -331,51 +376,6 @@ class VitV1:
         except Exception as e:
             print(f"An error occurred while generating the diff: {e}")
 
-    def _get_diverge_commit(self, branch1, branch2):
-        def prev(node1):
-            with open(os.path.join(self.object_dir, node1), "r") as commit_content:
-                content = json.load(commit_content)
-            return content["parent"]
-
-        first1 = self.get_branch_last_commit(branch1)
-        first2 = self.get_branch_last_commit(branch2)
-
-        node1 = first1
-        node2 = first2
-
-        while True:
-            if node1 == node2 and node1 != "":
-                return node1
-            node1 = prev(node1) if node1 != "" else first1
-            node2 = prev(node2) if node2 != "" else first2
-            node2 = prev(node2) if node2 != "" else first2
-
-    def _get_list_commits(self, branch, commit):
-        def prev(node1):
-            with open(os.path.join(self.object_dir, node1), "r") as commit_content:
-                content = json.load(commit_content)
-            return content["parent"]
-
-        node = self.get_branch_last_commit(branch)
-        list_node = []
-        while node != commit:
-            list_node.append(node)
-            node = prev(node)
-
-        list_node.append(commit)
-        return list_node
-
-    def _get_comment_character(self, file_path: str, content) -> str:
-        extention = file_path.split(".")[-1]
-        if extenstion in (".c", ".cpp", ".java", ".js", ".cs", ".swift", ".go"):
-            return f"/* f{content} */"
-        elif extenstion in (".py", ".rb", ".pl", ".sh", ".r"):
-            return "\n".join(["# f{cont}" for cont in content.splitlines()])
-        elif extenstion in (".html", ".md", ".xml"):
-            return f"<!-- {content} -->"
-        else:
-            return content
-
     def merge_files(base_path, commit1_file_path, commit2_file_path):
         """
         If there are conflicts, it marks them in the output file.
@@ -444,16 +444,23 @@ class VitV1:
                 return json.load(file)
 
         commit1_content = read_json(os.path.join(self.object_dir, commit1))
-        commit2_content = read_json(os.path.join(self.object_dir, commit2))['tree']
+        commit2_content = read_json(os.path.join(self.object_dir, commit2))
 
-        commit1_files=read_json(os.path.join(self.object_dir, commit1_content['tree']))
-        commit2_files=read_json(os.path.join(self.object_dir, commit2_content['tree']))
+        commit1_files = read_json(
+            os.path.join(self.object_dir, commit1_content["tree"])
+        )
+        commit2_files = read_json(
+            os.path.join(self.object_dir, commit2_content["tree"])
+        )
 
-        all_files=set(commit1_files.keys()+commit2_files.keys())
+        all_files = set(commit1_files.keys() + commit2_files.keys())
 
         for file in all_files:
-            self.merge_files(file,commit1_files[file],commit2_files[file])
-
+            self.merge_files(
+                file,
+                os.path.join(self.object_dir, commit1_files[file]),
+                os.path.join(self.object_dir, commit2_files[file]),
+            )
 
     def merge(self, branch: str):
         current_branch = self.get_current_branch()
@@ -466,6 +473,17 @@ class VitV1:
         current_branch = self.get_current_commit()
         self.merge_commits(current_branch, list_of_commits[-1])
 
+    def stash(self):
+        current_commit = self.get_current_commit()
+
+        commit_content = read_json(os.path.join(self.object_dir, current_commit))
+        commit_files = read_json(os.path.join(self.object_dir, commit_content["tree"]))
+
+        for commit_file, commit_file_oid in commit_files:
+            commit_file_content = self.read_file(
+                os.path.join(self.object_dir, commit_file_oid)
+            )
+            self.write_file(commit_file, commit_file_content)
 
     def push(self, branch=None) -> None:
         # TODO
