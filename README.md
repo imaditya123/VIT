@@ -13,7 +13,7 @@ VIT (Version Information Tracker) is a simple command-line version control syste
 - **Commit changes** with a message (`vit commit`)
 - **Checkout branches** (`vit checkout`)
 - **List available branches** (`vit branch`)
-- **List available branches** (`vit merge`)
+- **Merge available branches** (`vit merge`)
 - **Show differences** between file versions (`vit diff`)
 
 ---
