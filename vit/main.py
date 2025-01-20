@@ -50,7 +50,12 @@ def clone_repo(args):
     # unziping
     with ZipFile(save_path) as zObject: 
         zObject.extractall() 
+    os.remove(save_path)
 
+def merge_branches(args):
+    vit = VitV1(repo_path=os.getcwd())
+    vit.merge(args.branch)
+    
 
 def main():
 
@@ -94,6 +99,11 @@ def main():
     parser_repo = subparsers.add_parser("clone", help="clones the repo")
     parser_repo.add_argument("url", help="url of the github repository")
     parser_repo.set_defaults(func=clone_repo)
+
+    # Subparser for Diif
+    parser_merge = subparsers.add_parser("merge", help="Merge the branches")
+    parser_merge.add_argument("branch",  help="Branch that needs to merge")
+    parser_merge.set_defaults(func=merge_branches)
 
     args = parser.parse_args()
 
