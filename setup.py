@@ -12,9 +12,9 @@ setup(
     description="A simple version control system inspired by Git",
     long_description=open("README.md").read(),  # Optional, if you have a README.md
     long_description_content_type="text/markdown",  # Optional, if you're using markdown
-    author="Your Name",  # Replace with your name or the project's author
-    author_email="your.email@example.com",  # Replace with the author's email
-    url="https://github.com/yourusername/vit",  # Replace with your project’s URL
+    author="Aditya Rathore",  # Replace with your name or the project's author
+    author_email="imadityarathore@gmail.com",  # Replace with the author's email
+    url="https://github.com/imaditya123/vit",  # Replace with your project’s URL
     packages=find_packages(),  # Automatically find and include all sub-packages
     classifiers=[
         "Programming Language :: Python :: 3",
